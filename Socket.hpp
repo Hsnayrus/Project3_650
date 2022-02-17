@@ -139,6 +139,7 @@ Method that allows a socket to receive data from clients
     for (size_t i = 0; i < buffer.size(); i++) {
       std::cout << buffer[i];
     }
+    std::cout << buffer.size() << std::endl;
     std::cout << std::endl;
     return buffer;
   }

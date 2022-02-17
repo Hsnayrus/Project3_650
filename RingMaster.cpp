@@ -18,8 +18,4 @@ int main() {
   while (true) {
     s1.acceptConnections(100);
   }
-  Socket client("127.0.0.1", "4445");
-  std::string messageToSend = "Test message sending from client";
-  std::vector<char> newVector(messageToSend.begin(), messageToSend.end());
-  client.sendToServer(newVector);
 }
