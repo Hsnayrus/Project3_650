@@ -1,3 +1,4 @@
+#include <arpa/inet.h>
 #include <netdb.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -83,9 +84,10 @@ This function creates a socket with the hostname and socket initialized before w
       return -21;
       ;
     }
-
     return 0;
   }
+
+  int getSocket_FD() { return socket_fd; }
   /*
 This function is responsible for binding the socket to a file descriptor on our local machine.
 It will enable us to listen for incoming requests on the socket
@@ -104,7 +106,7 @@ It will enable us to listen for incoming requests on the socket
 
   int listenOnSocket() {
     //1020 limit as suggested by project guidelines.
-    status = listen(socket_fd, 1020);
+    status = listen(socket_fd, 100);
     if (status != 0) {
       std::cerr << "Error in listening on socket with hostname " << hostName
                 << " and port: " << port << std::endl;
@@ -112,25 +114,42 @@ It will enable us to listen for incoming requests on the socket
     return status;
   }
 
+  std::string getIPAddress(struct sockaddr * sa) {
+    char ipChar[INET_ADDRSTRLEN];
+    struct sockaddr_in * ipAddressStruct = (struct sockaddr_in *)sa;
+    inet_ntop(AF_INET, &(ipAddressStruct->sin_addr), ipChar, INET_ADDRSTRLEN);
+    std::string result = std::string(ipChar);
+    return result;
+  }
   /*
 Method that allows a socket to receive data from clients
 */
-  int acceptConnections(int noConnections) {
+  std::pair<int, std::string> acceptConnections(int noConnections) {
     int client_connection_fd;
     // while (noConnections != 0) {
     std::cout << "Waiting for connection on port: " << port << std::endl;
     struct sockaddr_storage socket_addr;
+    std::string ipAddress = getIPAddress((struct sockaddr *)&socket_addr);
     socklen_t socket_addr_len = sizeof(socket_addr);
     client_connection_fd =
         accept(socket_fd, (struct sockaddr *)&socket_addr, &socket_addr_len);
     if (client_connection_fd == -1) {
       std::cerr << "Error: Cannot accept connection on socket\n";
-      return -1;
+      // return ;
     }
     // }
     readBuffer(client_connection_fd);
-    return client_connection_fd;
+    return std::make_pair(client_connection_fd, ipAddress);
   }
+
+  void sendToClient(int client_fd, std::string message) {
+    std::vector<char> buffer(message.begin(), message.end());
+    int status = send(client_fd, buffer.data(), message.size(), 0);
+    if (status == -1) {
+      std::cerr << "Error in sending ipAddress to client";
+    }
+  }
+
   //Reads from the buffer
   std::vector<char> readBuffer(int client_connection_fd) {
     std::vector<char> buffer(1024 * 1024);
@@ -139,11 +158,9 @@ Method that allows a socket to receive data from clients
     for (size_t i = 0; i < buffer.size(); i++) {
       std::cout << buffer[i];
     }
-    std::cout << buffer.size() << std::endl;
     std::cout << std::endl;
     return buffer;
   }
-
   /*
 Method that allows user to send data to the server
 */
