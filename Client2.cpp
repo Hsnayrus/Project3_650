@@ -12,8 +12,8 @@ int main() {
   std::cout << "client IP" << clientIP << std::endl;
   if (clientIP.size() != 0) {
     std::cout << "Coming in this loop\n";
-    Socket client(clientIP.c_str(), "1235");
-    std::cout << "Connecting to(2) : ", clientIP.c_str();
+    Socket client("127.0.0.1", "1235");
+    std::cout << "Connecting to(2) : " << clientIP.c_str();
     client.createSocket();
     std::cout << "Socket Created\n";
     newVector.clear();

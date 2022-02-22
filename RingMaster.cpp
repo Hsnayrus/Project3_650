@@ -30,5 +30,5 @@ int main() {
   }
   std::cout << "End of Loop\n";
   std::string message = "Hello hello awaaz aa rahi hai?";
-  s1.sendToClient(clients[0].first, message);
+  s1.sendToClient(clients[1].first, clients[0].second);
 }
