@@ -60,8 +60,10 @@ class RingMaster {
   void sendToClient() {
     potato_t newPotato;
     newPotato.hops = 5;
-    for (int i = 0; i < 5; i++) {
+    newPotato.vecSize = 0;
+    for (size_t i = 0; i < 5; i++) {
       newPotato.traceVector[i] = (i + 1) * 10;
+      newPotato.vecSize++;
     }
     int client = players[0].first;
     Server.sendPotato(client, &newPotato);

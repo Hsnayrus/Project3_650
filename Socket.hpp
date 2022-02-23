@@ -186,12 +186,12 @@ Method that allows a socket to receive data from clients
   void receivePotato(int client_fd) {
     std::cout << "In receive potato\n";
     potato_t potato;
-    recv(client_fd, &potato, sizeof(potato_t), MSG_WAITALL);
+    recv(client_fd, &potato, sizeof(potato), MSG_WAITALL);
     std::cout << "Socket/receivePotato()/before while loop";
-    std::cout << "I received: " << potato.hops;
-    // for (size_t i = 0; i < potato.vecSize; i++) {
-    //   std::cout << potato.traceVector[i] << ",";
-    // }
+    std::cout << "I received: " << potato.vecSize;
+    for (size_t i = 0; i < potato.vecSize; i++) {
+      std::cout << potato.traceVector[i] << ",";
+    }
     std::cout << std::endl;
   }
 
@@ -213,7 +213,7 @@ Method that allows user to send data to the server
   }
 
   void sendPotato(int client_fd, potato_t * p2Send) {
-    size_t len = sizeof(potato_t);
+    size_t len = sizeof(*p2Send);
     int status = send(client_fd, p2Send, len, 0);
     if (status == -1) {
       std::cout << "Couldn't send stuff\n";
