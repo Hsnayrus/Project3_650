@@ -5,8 +5,10 @@
 
 #include <cstring>
 #include <iostream>
+#include <sstream>
 #include <vector>
 
+#include "Potato.hpp"
 typedef struct addrinfo AddressInfo;
 
 class Socket {
@@ -42,7 +44,8 @@ to a host. The host is self hence the hostName field should stay NULL
 */
   Socket(const char * newPort) {
     port = newPort;
-    hostName = INADDR_ANY;
+    hostName = "0.0.0.0";
+    std::cout << "Server const char " << hostName << std::endl;
   }
 
   /*
@@ -52,7 +55,8 @@ to a host. The host is self hence the hostName field should stay 0.0.0.0 as sugg
 */
   Socket(std::string & newPort) {
     port = newPort.c_str();
-    hostName = INADDR_ANY;
+    hostName = "0.0.0.0";
+    std::cout << "Server std::string " << hostName << std::endl;
   }
 
   /*
@@ -86,6 +90,25 @@ This function creates a socket with the hostname and socket initialized before w
     }
     return 0;
   }
+  Socket(const Socket & rhs) {
+    hostName = rhs.hostName;
+    port = rhs.port;
+    createSocket();
+  }
+  Socket() {
+    hostName = "";
+    port = "";
+  }
+
+  ~Socket() { freeaddrinfo(host_info_list); }
+  Socket & operator=(const Socket & rhs) {
+    if (this != &rhs) {
+      hostName = rhs.hostName;
+      port = rhs.port;
+      createSocket();
+    }
+    return *this;
+  }
 
   int getSocket_FD() { return socket_fd; }
   /*
@@ -118,18 +141,17 @@ It will enable us to listen for incoming requests on the socket
     char ipChar[INET_ADDRSTRLEN];
     struct sockaddr_in * ipAddressStruct = (struct sockaddr_in *)sa;
     inet_ntop(AF_INET, &(ipAddressStruct->sin_addr), ipChar, INET_ADDRSTRLEN);
+    std::cout << ntohs(ipAddressStruct->sin_port) << "Socket.hpp/getIPAddress()";
     std::string result = std::string(ipChar);
     return result;
   }
   /*
 Method that allows a socket to receive data from clients
 */
-  std::pair<int, std::string> acceptConnections(int noConnections) {
+  std::pair<int, std::string> acceptConnections() {
     int client_connection_fd;
-    // while (noConnections != 0) {
     std::cout << "Waiting for connection on port: " << port << std::endl;
     struct sockaddr_storage socket_addr;
-    std::string ipAddress = getIPAddress((struct sockaddr *)&socket_addr);
     socklen_t socket_addr_len = sizeof(socket_addr);
     client_connection_fd =
         accept(socket_fd, (struct sockaddr *)&socket_addr, &socket_addr_len);
@@ -137,8 +159,7 @@ Method that allows a socket to receive data from clients
       std::cerr << "Error: Cannot accept connection on socket\n";
       // return ;
     }
-    // }
-    readBuffer(client_connection_fd);
+    std::string ipAddress = getIPAddress((struct sockaddr *)&socket_addr);
     return std::make_pair(client_connection_fd, ipAddress);
   }
 
@@ -161,6 +182,19 @@ Method that allows a socket to receive data from clients
     std::cout << std::endl;
     return buffer;
   }
+
+  void receivePotato(int client_fd) {
+    std::cout << "In receive potato\n";
+    potato_t potato;
+    recv(client_fd, &potato, sizeof(potato_t), MSG_WAITALL);
+    std::cout << "Socket/receivePotato()/before while loop";
+    std::cout << "I received: " << potato.hops;
+    // for (size_t i = 0; i < potato.vecSize; i++) {
+    //   std::cout << potato.traceVector[i] << ",";
+    // }
+    std::cout << std::endl;
+  }
+
   /*
 Method that allows user to send data to the server
 */
@@ -176,5 +210,13 @@ Method that allows user to send data to the server
 
     const char * message = request.data();
     send(socket_fd, message, strlen(message), 0);
+  }
+
+  void sendPotato(int client_fd, potato_t * p2Send) {
+    size_t len = sizeof(potato_t);
+    int status = send(client_fd, p2Send, len, 0);
+    if (status == -1) {
+      std::cout << "Couldn't send stuff\n";
+    }
   }
 };
