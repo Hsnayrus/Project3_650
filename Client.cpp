@@ -90,7 +90,9 @@ int main() {
   client.sendToServer(newVector);
 
   newVector.clear();
-  client.receiveClientInfo(client.getSocket_FD());
+  cInfo_t info;
+  client.receiveClientInfo(client.getSocket_FD(), info);
+
   // int len = recv(client.getSocket_FD(), buffer.data(), buffer.size(), 0);
   // std::string ipPort(buffer.begin(), buffer.begin() + len);
   // std::pair<std::string, std::string> ipPortPair = parseIPPort(ipPort);

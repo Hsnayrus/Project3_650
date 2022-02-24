@@ -223,13 +223,13 @@ Method that allows user to send data to the server
     }
   }
   //Not sure about parameter's name
-  void receiveClientInfo(int server_fd) {
-    cInfo_t clientInfo;
+  void receiveClientInfo(int server_fd, cInfo_t & clientInfo) {
     recv(server_fd, &clientInfo, sizeof(clientInfo), MSG_WAITALL);
     std::cout << "=======================" << std::endl;
     std::cout << clientInfo.fd << std::endl;
     std::cout << clientInfo.portNum << std::endl;
     std::cout << clientInfo.ipSize << std::endl;
+    std::cout << clientInfo.nPort << std::endl;
     for (int i = 0; i < clientInfo.ipSize; i++) {
       std::cout << clientInfo.ipAddress[i];
     }

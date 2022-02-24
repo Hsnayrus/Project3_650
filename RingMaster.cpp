@@ -5,7 +5,7 @@ https://beej.us/guide/bgnet/html//index.html
 
 
 I have also taken references from the 07-tcp_example.zip file available
-in the Resources tab in Sakai
+in the Resources tab in Sakai.
 */
 
 #include <cassert>
@@ -109,6 +109,7 @@ int main() {
   int noPlayers = 3;
   std::vector<char> buffer(65536);
   std::vector<std::string> ipAddresses;
+  std::vector<int> nPorts;
   // buffer.clear();
   //Accept players;
   for (int i = 0; i < noPlayers; i++) {
@@ -121,6 +122,7 @@ int main() {
     clientInfo.fd = temp.first;
     clientInfo.portNum = 2000 + i;
     ipAddresses.push_back(temp.second);
+    nPorts.push_back(clientInfo.portNum);
     if (message.find("Ready for connection.") != std::string::npos) {
       clientsInformation.push_back(clientInfo);
     }
@@ -132,11 +134,12 @@ int main() {
   size_t size = ipAddresses.size();
   for (size_t i = 0; i < size; i++) {
     ipAddresses.push_back(ipAddresses[i]);
+    nPorts.push_back(nPorts[i]);
   }
-  ipAddresses[size] = "399.99.99.99";
   //Loop to set player's target ip addresses
   for (size_t i = 0; i < clientsInformation.size(); i++) {
     (clientsInformation[i]).ipSize = ipAddresses[i + 1].size();
+    (clientsInformation[i]).nPort = nPorts[i + 1];
     for (size_t j = 0; j < ipAddresses[i + 1].size(); j++) {
       (clientsInformation[i]).ipAddress[j] = (ipAddresses[i + 1])[j];
     }
@@ -152,6 +155,7 @@ int main() {
     for (int j = 0; j < temp.ipSize; j++) {
       temp.ipAddress[j] = (clientsInformation[i]).ipAddress[j];
     }
+    temp.nPort = clientsInformation[i].nPort;
     ringMaster.sendClientInfo(temp.fd, &temp);
     temp.fd = clientsInformation[i].fd;
     std::cout << "%%%%%%%%%%%%%%%%\n";

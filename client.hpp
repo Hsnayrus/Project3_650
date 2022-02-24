@@ -6,6 +6,7 @@ typedef struct clientInfo {
   int portNum;
   char ipAddress[16];
   int ipSize;
+  int nPort;
 } cInfo_t;
 
 #endif
