@@ -2,7 +2,7 @@
 
 int main() {
   Socket player("127.0.0.1", "4445");
-  std::string messageToSend = "Client 2 sending message";
+  std::string messageToSend = "Ready for connection.";
   std::vector<char> newVector(messageToSend.begin(), messageToSend.end());
   player.createSocket();
   player.sendToServer(newVector);

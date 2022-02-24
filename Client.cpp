@@ -82,30 +82,23 @@ std::pair<std::string, std::string> parseIPPort(std::string message) {
 }
 
 int main() {
-  Socket client("127.0.0.1", "4445");
+  Socket client("127.0.0.1", "4448");
   std::string messageToSend = "Ready for connection.";
-  std::vector<char> newVector(messageToSend.begin(), messageToSend.end());
+  std::vector<char> newVector(messageToSend.begin(),
+                              messageToSend.begin() + messageToSend.size());
   client.createSocket();
   client.sendToServer(newVector);
 
   newVector.clear();
-  newVector = client.readBuffer(client.getSocket_FD());
-  std::string message(newVector.begin(), newVector.end());
-  std::cout << "\n\tPlayer received: " << message << std::endl;
-  std::pair<int, int> idNoPlayers = parseIDNoPlayers(message);
-  int port = idNoPlayers.first;
-  int noPlayers = idNoPlayers.second;
-  std::cout << "Connected as player " << (port - 2000) << " of " << noPlayers
-            << "players\n";
-  std::vector<char> buffer(65536);
-  int len = recv(client.getSocket_FD(), buffer.data(), buffer.size(), 0);
-
-  std::string ipPort(buffer.begin(), buffer.begin() + len);
-  std::pair<std::string, std::string> ipPortPair = parseIPPort(ipPort);
-  std::cout << ipPortPair.first << "______________________" << ipPortPair.second;
-  //Listener in every client
+  client.receiveClientInfo(client.getSocket_FD());
+  // int len = recv(client.getSocket_FD(), buffer.data(), buffer.size(), 0);
+  // std::string ipPort(buffer.begin(), buffer.begin() + len);
+  // std::pair<std::string, std::string> ipPortPair = parseIPPort(ipPort);
+  // std::cout << ipPortPair.first << "______________________" << ipPortPair.second;
+  // //Listener in every client
   // Socket rightClient(ipPortPair.first.c_str(), ipPortPair.second.c_str());
   // rightClient.createSocket();
   // std::string ipMessage(buffer.begin(), buffer.end());
   // std::cout << "$$$$" << ipMessage << std::endl;
+  return 0;
 }

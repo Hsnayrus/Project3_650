@@ -9,6 +9,7 @@
 #include <vector>
 
 #include "Potato.hpp"
+#include "client.hpp"
 typedef struct addrinfo AddressInfo;
 
 class Socket {
@@ -45,7 +46,6 @@ to a host. The host is self hence the hostName field should stay NULL
   Socket(const char * newPort) {
     port = newPort;
     hostName = "0.0.0.0";
-    std::cout << "Server const char " << hostName << std::endl;
   }
 
   /*
@@ -141,7 +141,6 @@ It will enable us to listen for incoming requests on the socket
     char ipChar[INET_ADDRSTRLEN];
     struct sockaddr_in * ipAddressStruct = (struct sockaddr_in *)sa;
     inet_ntop(AF_INET, &(ipAddressStruct->sin_addr), ipChar, INET_ADDRSTRLEN);
-    std::cout << ntohs(ipAddressStruct->sin_port) << "Socket.hpp/getIPAddress()";
     std::string result = std::string(ipChar);
     return result;
   }
@@ -172,23 +171,20 @@ Method that allows a socket to receive data from clients
   }
 
   //Reads from the buffer
-  std::vector<char> readBuffer(int client_connection_fd) {
-    std::vector<char> buffer(65536);
+  int readBuffer(int client_connection_fd, std::vector<char> & buffer) {
     int len = recv(client_connection_fd, buffer.data(), buffer.size(), 0);
     std::cout << "Server received: ";
     for (int i = 0; i < len; i++) {
       std::cout << buffer[i];
     }
     std::cout << std::endl;
-    return std::vector<char>(buffer.begin(), buffer.begin() + len);
+    return len;
+    // return std::vector<char>(buffer.begin(), buffer.begin() + len);
   }
 
   void receivePotato(int client_fd) {
-    std::cout << "In receive potato\n";
     potato_t potato;
     recv(client_fd, &potato, sizeof(potato), MSG_WAITALL);
-    std::cout << "Socket/receivePotato()/before while loop";
-    std::cout << "I received: " << potato.vecSize;
     for (size_t i = 0; i < potato.vecSize; i++) {
       std::cout << potato.traceVector[i] << ",";
     }
@@ -198,7 +194,7 @@ Method that allows a socket to receive data from clients
   /*
 Method that allows user to send data to the server
 */
-  void sendToServer(std::vector<char> request) {
+  void sendToServer(std::vector<char> & request) {
     std::cout << "Connecting to " << hostName << " on port " << port << "..."
               << std::endl;
 
@@ -208,8 +204,7 @@ Method that allows user to send data to the server
       std::cerr << "  (" << hostName << "," << port << ")" << std::endl;
     }  //if
 
-    const char * message = request.data();
-    send(socket_fd, message, strlen(message), 0);
+    send(socket_fd, request.data(), request.size(), 0);
   }
 
   void sendPotato(int client_fd, potato_t * p2Send) {
@@ -218,5 +213,26 @@ Method that allows user to send data to the server
     if (status == -1) {
       std::cout << "Couldn't send stuff\n";
     }
+  }
+
+  void sendClientInfo(int client_fd, cInfo_t * c2Send) {
+    size_t len = sizeof(*c2Send);
+    int status = send(client_fd, c2Send, len, 0);
+    if (status == -1) {
+      std::cerr << "Couln't send clients their info\n";
+    }
+  }
+  //Not sure about parameter's name
+  void receiveClientInfo(int server_fd) {
+    cInfo_t clientInfo;
+    recv(server_fd, &clientInfo, sizeof(clientInfo), MSG_WAITALL);
+    std::cout << "=======================" << std::endl;
+    std::cout << clientInfo.fd << std::endl;
+    std::cout << clientInfo.portNum << std::endl;
+    std::cout << clientInfo.ipSize << std::endl;
+    for (int i = 0; i < clientInfo.ipSize; i++) {
+      std::cout << clientInfo.ipAddress[i];
+    }
+    std::cout << std::endl;
   }
 };
