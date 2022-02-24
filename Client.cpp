@@ -93,6 +93,18 @@ int main() {
   cInfo_t info;
   client.receiveClientInfo(client.getSocket_FD(), info);
 
+  //Server that waits for a connection
+  Socket leftPlayer(num2Str(info.portNum).c_str());
+  leftPlayer.createSocket();
+  leftPlayer.bindSocket();
+  leftPlayer.listenOnSocket();
+  leftPlayer.acceptConnections();
+  std::cout << "Created left Player socket\n";
+  //Client that establishes a connection with the other player
+  Socket rightPlayer(info.ipAddress, num2Str(info.nPort).c_str());
+  rightPlayer.createSocket();
+  std::cout << "Created left Player socket\n";
+
   // int len = recv(client.getSocket_FD(), buffer.data(), buffer.size(), 0);
   // std::string ipPort(buffer.begin(), buffer.begin() + len);
   // std::pair<std::string, std::string> ipPortPair = parseIPPort(ipPort);

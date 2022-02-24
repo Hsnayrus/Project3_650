@@ -230,6 +230,7 @@ Method that allows user to send data to the server
     std::cout << clientInfo.portNum << std::endl;
     std::cout << clientInfo.ipSize << std::endl;
     std::cout << clientInfo.nPort << std::endl;
+    std::cout << clientInfo.noPlayers << std::endl;
     for (int i = 0; i < clientInfo.ipSize; i++) {
       std::cout << clientInfo.ipAddress[i];
     }

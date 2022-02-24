@@ -7,6 +7,7 @@ typedef struct clientInfo {
   char ipAddress[16];
   int ipSize;
   int nPort;
+  int noPlayers;
 } cInfo_t;
 
 #endif

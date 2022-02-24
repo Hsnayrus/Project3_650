@@ -121,6 +121,7 @@ int main() {
     cInfo_t clientInfo;
     clientInfo.fd = temp.first;
     clientInfo.portNum = 2000 + i;
+    clientInfo.noPlayers = noPlayers;
     ipAddresses.push_back(temp.second);
     nPorts.push_back(clientInfo.portNum);
     if (message.find("Ready for connection.") != std::string::npos) {
@@ -156,6 +157,7 @@ int main() {
       temp.ipAddress[j] = (clientsInformation[i]).ipAddress[j];
     }
     temp.nPort = clientsInformation[i].nPort;
+    temp.noPlayers = clientsInformation[i].noPlayers;
     ringMaster.sendClientInfo(temp.fd, &temp);
     temp.fd = clientsInformation[i].fd;
     std::cout << "%%%%%%%%%%%%%%%%\n";
