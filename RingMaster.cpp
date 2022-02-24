@@ -13,6 +13,128 @@ in the Resources tab in Sakai.
 #include "Socket.hpp"
 #include "client.hpp"
 #include "functions.hpp"
+
+int main() {
+  Socket ringMaster("4448");
+  ringMaster.createSocket();
+  ringMaster.bindSocket();
+  ringMaster.listenOnSocket();
+  std::vector<cInfo_t> clientsInformation;
+  int noPlayers = 3;
+  std::vector<char> buffer(65536);
+  std::vector<std::string> ipAddresses;
+  std::vector<int> nPorts;
+  // buffer.clear();
+  //Accept players;
+  for (int i = 0; i < noPlayers; i++) {
+    std::pair<int, std::string> temp = ringMaster.acceptConnections();
+    std::cout << "Accept players loop " << temp.first << "\n";
+    int len = ringMaster.readBuffer(temp.first, buffer);
+
+    std::string message(buffer.begin(), buffer.begin() + len);
+    cInfo_t clientInfo;
+    clientInfo.fd = temp.first;
+    clientInfo.portNum = 31000 + i;
+    clientInfo.noPlayers = noPlayers;
+    ipAddresses.push_back(temp.second);
+    nPorts.push_back(clientInfo.portNum);
+    if (message.find("Ready for connection.") != std::string::npos) {
+      clientsInformation.push_back(clientInfo);
+    }
+  }
+  std::cout << clientsInformation.size() << "&&&&\n";
+  //Basically i am appending the list of ip addresss to itself;
+  //Then i will just assign target addresses to players starting from index 1.
+  //This is a cleaner approach
+  size_t size = ipAddresses.size();
+  for (size_t i = 0; i < size; i++) {
+    ipAddresses.push_back(ipAddresses[i]);
+    nPorts.push_back(nPorts[i]);
+  }
+  //Loop to set player's target ip addresses
+  for (size_t i = 0; i < clientsInformation.size(); i++) {
+    (clientsInformation[i]).ipSize = ipAddresses[i + 1].size();
+    (clientsInformation[i]).nPort = nPorts[i + 1];
+    for (size_t j = 0; j < ipAddresses[i + 1].size(); j++) {
+      (clientsInformation[i]).ipAddress[j] = (ipAddresses[i + 1])[j];
+    }
+  }
+
+  //Loop to send client's their portNumber, their fd's and their neighbors ip Addresses
+  for (size_t i = 0; i < clientsInformation.size(); i++) {
+    std::cout << "Coming in this loop\n";
+    cInfo_t temp;
+    temp.fd = clientsInformation[i].fd;
+    temp.portNum = clientsInformation[i].portNum;
+    temp.ipSize = clientsInformation[i].ipSize;
+    for (int j = 0; j < temp.ipSize; j++) {
+      temp.ipAddress[j] = (clientsInformation[i]).ipAddress[j];
+    }
+    temp.nPort = clientsInformation[i].nPort;
+    temp.noPlayers = clientsInformation[i].noPlayers;
+    ringMaster.sendClientInfo(temp.fd, &temp);
+    temp.fd = clientsInformation[i].fd;
+    std::cout << "%%%%%%%%%%%%%%%%\n";
+    std::cout << temp.fd << " " << temp.ipSize << " " << temp.portNum << std::endl;
+    for (int i = 0; i < temp.ipSize; i++) {
+      std::cout << temp.ipAddress[i];
+    }
+  }
+
+  //Accept client status, listening information from players
+  std::vector<sync_t> clientSync;
+  for (int i = 0; i < noPlayers; i++) {
+    sync_t temp;
+    temp.doneAccepting = 0;
+    temp.doneListening = 0;
+    ringMaster.receiveSyncInfo(clientsInformation[i].fd, temp);
+    temp.startAccepting = 1;
+    clientSync.push_back(temp);
+  }
+
+  //Check if all are done listening
+  int allDoneListening = 0;
+  for (int i = 0; i < noPlayers; i++) {
+    if (clientSync[i].doneListening == 1) {
+      allDoneListening++;
+    }
+  }
+  //Tell clients to start accepting connections
+  if (allDoneListening == noPlayers) {
+    for (int i = 0; i < noPlayers; i++) {
+      sync_t temp;
+      temp.doneAccepting = clientSync[i].doneAccepting;
+      temp.doneListening = clientSync[i].doneListening;
+      temp.startAccepting = clientSync[i].startAccepting;
+      ringMaster.sendSyncInfo(clientsInformation[i].fd, &temp);
+    }
+  }
+  //Receive ack that everyone has started accepting connections
+  for (int i = 0; i < noPlayers; i++) {
+    sync_t temp;
+    ringMaster.receiveSyncInfo(clientsInformation[i].fd, temp);
+    clientSync[i].doneAccepting = temp.doneAccepting;
+    clientSync[i].doneListening = temp.doneListening;
+    clientSync[i].startAccepting = temp.startAccepting;
+  }
+  int allAccepted = 0;
+  for (int i = 0; i < noPlayers; i++) {
+    if (clientSync[i].doneAccepting == 1) {
+      allAccepted++;
+    }
+  }
+  std::cout << "All clients accepted it seems\n";
+  //Send neihbors to players
+
+  // RingMaster r1(2);
+  // r1.makeServerSocket();
+  // r1.letPlayersConnect();
+  // r1.sendIDsToPlayers();
+  // r1.assignNeighbors();
+  // r1.sendPotatoToClient();
+  return 0;
+}
+
 // class RingMaster {
 //   Socket Server;
 //   std::vector<std::pair<int, std::pair<std::string, std::string> > > players;
@@ -99,80 +221,3 @@ in the Resources tab in Sakai.
 //     Server.sendPotato(client, &newPotato);
 //   }
 // };
-
-int main() {
-  Socket ringMaster("4448");
-  ringMaster.createSocket();
-  ringMaster.bindSocket();
-  ringMaster.listenOnSocket();
-  std::vector<cInfo_t> clientsInformation;
-  int noPlayers = 3;
-  std::vector<char> buffer(65536);
-  std::vector<std::string> ipAddresses;
-  std::vector<int> nPorts;
-  // buffer.clear();
-  //Accept players;
-  for (int i = 0; i < noPlayers; i++) {
-    std::pair<int, std::string> temp = ringMaster.acceptConnections();
-    std::cout << "Accept players loop " << temp.first << "\n";
-    int len = ringMaster.readBuffer(temp.first, buffer);
-
-    std::string message(buffer.begin(), buffer.begin() + len);
-    cInfo_t clientInfo;
-    clientInfo.fd = temp.first;
-    clientInfo.portNum = 2000 + i;
-    clientInfo.noPlayers = noPlayers;
-    ipAddresses.push_back(temp.second);
-    nPorts.push_back(clientInfo.portNum);
-    if (message.find("Ready for connection.") != std::string::npos) {
-      clientsInformation.push_back(clientInfo);
-    }
-  }
-  std::cout << clientsInformation.size() << "&&&&\n";
-  //Basically i am appending the list of ip addresss to itself;
-  //Then i will just assign target addresses to players starting from index 1.
-  //This is a cleaner approach
-  size_t size = ipAddresses.size();
-  for (size_t i = 0; i < size; i++) {
-    ipAddresses.push_back(ipAddresses[i]);
-    nPorts.push_back(nPorts[i]);
-  }
-  //Loop to set player's target ip addresses
-  for (size_t i = 0; i < clientsInformation.size(); i++) {
-    (clientsInformation[i]).ipSize = ipAddresses[i + 1].size();
-    (clientsInformation[i]).nPort = nPorts[i + 1];
-    for (size_t j = 0; j < ipAddresses[i + 1].size(); j++) {
-      (clientsInformation[i]).ipAddress[j] = (ipAddresses[i + 1])[j];
-    }
-  }
-
-  //Loop to send client's their portNumber, their fd's and their neighbors ip Addresses
-  for (size_t i = 0; i < clientsInformation.size(); i++) {
-    std::cout << "Coming in this loop\n";
-    cInfo_t temp;
-    temp.fd = clientsInformation[i].fd;
-    temp.portNum = clientsInformation[i].portNum;
-    temp.ipSize = clientsInformation[i].ipSize;
-    for (int j = 0; j < temp.ipSize; j++) {
-      temp.ipAddress[j] = (clientsInformation[i]).ipAddress[j];
-    }
-    temp.nPort = clientsInformation[i].nPort;
-    temp.noPlayers = clientsInformation[i].noPlayers;
-    ringMaster.sendClientInfo(temp.fd, &temp);
-    temp.fd = clientsInformation[i].fd;
-    std::cout << "%%%%%%%%%%%%%%%%\n";
-    std::cout << temp.fd << " " << temp.ipSize << " " << temp.portNum << std::endl;
-    for (int i = 0; i < temp.ipSize; i++) {
-      std::cout << temp.ipAddress[i];
-    }
-  }
-  //Send neihbors to players
-
-  // RingMaster r1(2);
-  // r1.makeServerSocket();
-  // r1.letPlayersConnect();
-  // r1.sendIDsToPlayers();
-  // r1.assignNeighbors();
-  // r1.sendPotatoToClient();
-  return 0;
-}

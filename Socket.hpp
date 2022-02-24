@@ -10,6 +10,8 @@
 
 #include "Potato.hpp"
 #include "client.hpp"
+#include "synchronize.hpp"
+
 typedef struct addrinfo AddressInfo;
 
 class Socket {
@@ -235,5 +237,33 @@ Method that allows user to send data to the server
       std::cout << clientInfo.ipAddress[i];
     }
     std::cout << std::endl;
+  }
+
+  void connectTo(int client_fd) {
+    std::cout << "Connecting to " << hostName << " on port " << port << "..."
+              << std::endl;
+
+    status = connect(socket_fd, host_info_list->ai_addr, host_info_list->ai_addrlen);
+    if (status == -1) {
+      std::cerr << "Error: cannot connect to socket" << std::endl;
+      std::cerr << "  (" << hostName << "," << port << ")" << std::endl;
+    }  //if
+  }
+
+  void sendSyncInfo(int fd, sync_t * syncInfo) {
+    int len = sizeof(*syncInfo);
+    int status = send(fd, syncInfo, len, 0);
+    if (status == -1) {
+      std::cerr << "Couldn't send sync info\n";
+    }
+  }
+
+  void receiveSyncInfo(int fd, sync_t & syncInfo) {
+    int len = sizeof(syncInfo);
+    recv(fd, &syncInfo, len, MSG_WAITALL);
+    std::cout << "-^-^-^-^-^-^-^-^-^-^\n";
+    std::cout << syncInfo.doneListening << std::endl;
+    std::cout << syncInfo.startAccepting << std::endl;
+    std::cout << syncInfo.doneAccepting << std::endl;
   }
 };
