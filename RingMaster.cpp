@@ -108,6 +108,7 @@ int main() {
   std::vector<cInfo_t> clientsInformation;
   int noPlayers = 3;
   std::vector<char> buffer(65536);
+  std::vector<std::string> ipAddresses;
   // buffer.clear();
   //Accept players;
   for (int i = 0; i < noPlayers; i++) {
@@ -119,17 +120,29 @@ int main() {
     cInfo_t clientInfo;
     clientInfo.fd = temp.first;
     clientInfo.portNum = 2000 + i;
-    clientInfo.ipSize = 0;
-    //Will be changed later
-    for (size_t j = 0; j < (temp.second).size(); j++) {
-      clientInfo.ipAddress[j] = (temp.second)[j];
-      clientInfo.ipSize++;
-    }
+    ipAddresses.push_back(temp.second);
     if (message.find("Ready for connection.") != std::string::npos) {
       clientsInformation.push_back(clientInfo);
     }
   }
   std::cout << clientsInformation.size() << "&&&&\n";
+  //Basically i am appending the list of ip addresss to itself;
+  //Then i will just assign target addresses to players starting from index 1.
+  //This is a cleaner approach
+  size_t size = ipAddresses.size();
+  for (size_t i = 0; i < size; i++) {
+    ipAddresses.push_back(ipAddresses[i]);
+  }
+  ipAddresses[size] = "399.99.99.99";
+  //Loop to set player's target ip addresses
+  for (size_t i = 0; i < clientsInformation.size(); i++) {
+    (clientsInformation[i]).ipSize = ipAddresses[i + 1].size();
+    for (size_t j = 0; j < ipAddresses[i + 1].size(); j++) {
+      (clientsInformation[i]).ipAddress[j] = (ipAddresses[i + 1])[j];
+    }
+  }
+
+  //Loop to send client's their portNumber, their fd's and their neighbors ip Addresses
   for (size_t i = 0; i < clientsInformation.size(); i++) {
     std::cout << "Coming in this loop\n";
     cInfo_t temp;
