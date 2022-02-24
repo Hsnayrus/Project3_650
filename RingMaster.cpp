@@ -11,6 +11,7 @@ in the Resources tab in Sakai
 #include <cassert>
 
 #include "Socket.hpp"
+#include "functions.hpp"
 class RingMaster {
   Socket Server;
   std::vector<std::pair<int, std::pair<std::string, std::string> > > players;
@@ -34,30 +35,58 @@ class RingMaster {
     Server.bindSocket();
     Server.listenOnSocket();
   }
-  //This functino waits for incoming connections and assigns players automatically
+  //This functino waits for incoming connections and assigns players automatically/
+  //std::vector<std::pair<int, std::pair<std::string, std::string> > > playersis in the format:
+  //clientfd, <ipAddress, port>
   bool letPlayersConnect() {
     for (size_t i = 0; i < noPlayers; i++) {
       std::pair<int, std::string> temp = Server.acceptConnections();
       std::vector<char> portVect = Server.readBuffer(temp.first);
-      std::string port(portVect.begin(), portVect.end());
-      std::pair<std::string, std::string> ipPort = std::make_pair(temp.second, port);
-      std::cout << port << " actually is the port\n";
-      players.push_back(std::make_pair(temp.first, ipPort));
+      int port = 2000 + i;
+      std::string messageFromClient(portVect.begin(), portVect.end());
+      if (messageFromClient.find("Ready for connection.") != std::string::npos) {
+        std::string portStr = num2Str(port);
+        players.push_back(
+            std::make_pair(temp.first, std::make_pair(temp.second, portStr)));
+      }
     }
     return true;
   }
 
   void assignNeighbors() {
     assert(players.size() == noPlayers);
+    std::string message = "";
     for (size_t i = 0; i < players.size() - 1; i++) {
-      std::string ipaddrPort = players[i].second.first + "\n" + players[i].second.second;
-      std::cout << "Start of iPport" << ipaddrPort << std::endl
-                << "Hymm for the weekend\n";
-      Server.sendToClient(players[i + 1].first, ipaddrPort);
+      message.clear();
+      message =
+          players[i + 1].second.first + "//////" + players[i + 1].second.second + "\n";
+      std::vector<char> loopBuffer(message.begin(), message.end());
+      send(players[i].first, loopBuffer.data(), message.size(), 0);
+    }
+    message.clear();
+    message = players[0].second.first + "//////" + players[0].second.second + "\n";
+    std::string buffer(message.begin(), message.end());
+    send(players[players.size() - 1].first, buffer.data(), message.size(), 0);
+  }
+
+  //Send ports. along with no of players to client
+  //ports = id + 2000
+  void sendIDsToPlayers() {
+    for (size_t i = 0; i < players.size(); i++) {
+      std::string message =
+          (players[i].second.second) + "//////" + num2Str(noPlayers) + "\n";
+      std::vector<char> buffer(message.begin(), message.end());
+      //Sending just their ids
+      int status = send(players[i].first, buffer.data(), message.size(), 0);
+      if (status == -1) {
+        std::cerr << "RingMaster/sendIDs, Couldn;t send ids\n";
+        return;
+      }
+      buffer.clear();
     }
   }
 
-  void sendToClient() {
+  void sendPotatoToClient() {
     potato_t newPotato;
     newPotato.hops = 5;
     newPotato.vecSize = 0;
@@ -71,9 +100,11 @@ class RingMaster {
 };
 
 int main() {
-  RingMaster r1(1);
+  RingMaster r1(2);
   r1.makeServerSocket();
   r1.letPlayersConnect();
-  r1.sendToClient();
+  r1.sendIDsToPlayers();
+  r1.assignNeighbors();
+  // r1.sendPotatoToClient();
   return 0;
 }

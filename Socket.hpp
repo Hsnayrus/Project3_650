@@ -173,14 +173,14 @@ Method that allows a socket to receive data from clients
 
   //Reads from the buffer
   std::vector<char> readBuffer(int client_connection_fd) {
-    std::vector<char> buffer(1024 * 1024);
-    recv(client_connection_fd, buffer.data(), buffer.size(), 0);
+    std::vector<char> buffer(65536);
+    int len = recv(client_connection_fd, buffer.data(), buffer.size(), 0);
     std::cout << "Server received: ";
-    for (size_t i = 0; i < buffer.size(); i++) {
+    for (int i = 0; i < len; i++) {
       std::cout << buffer[i];
     }
     std::cout << std::endl;
-    return buffer;
+    return std::vector<char>(buffer.begin(), buffer.begin() + len);
   }
 
   void receivePotato(int client_fd) {
