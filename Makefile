@@ -2,16 +2,13 @@ CPPFLAGS = -Wall -Werror -pedantic -ggdb3
 
 .PHONY: clean
  
-all: client ringmaster client2
+all: player ringmaster
 
 ringmaster: RingMaster.cpp
 	g++  -o ringmaster $(CPPFLAGS) RingMaster.cpp
 
-client: Client.cpp
-	g++  -o client $(CPPFLAGS) Client.cpp
-
-client2: Client2.cpp
-	g++ -o  client2 $(CPPFLAGS) Client2.cpp	
+player: player.cpp
+	g++  -o player $(CPPFLAGS) player.cpp
 
 clean:
-	rm -rf ringmaster client client2
+	rm -rf ringmaster player
