@@ -166,41 +166,50 @@ int main(int argc, char ** argv) {
   // std::cout << "\n###################\n";
   std::cout << "Ready to start the game, sending potato to player " << playerToStartWith
             << std::endl;
-  int status = send(clientsInformation[playerToStartWith].fd, &potato, sizeof(potato), 0);
-  if (status == -1) {
-    std::cerr << "Couldn't send potato to player: " << playerToStartWith << std::endl;
-  }
-  std::vector<int> fds;
+  if (noHops != 0) {
+    int status =
+        send(clientsInformation[playerToStartWith].fd, &potato, sizeof(potato), 0);
+    if (status == -1) {
+      std::cerr << "Couldn't send potato to player: " << playerToStartWith << std::endl;
+    }
+    std::vector<int> fds;
 
-  fd_set fdset;
-  FD_ZERO(&fdset);
-  for (size_t i = 0; i < clientsInformation.size(); i++) {
-    FD_SET(clientsInformation[i].fd, &fdset);
-    fds.push_back(clientsInformation[i].fd);
-  }
-  int fdmax = findMax(fds);
+    fd_set fdset;
+    FD_ZERO(&fdset);
+    for (size_t i = 0; i < clientsInformation.size(); i++) {
+      FD_SET(clientsInformation[i].fd, &fdset);
+      fds.push_back(clientsInformation[i].fd);
+    }
+    int fdmax = findMax(fds);
 
-  select(fdmax + 1, &fdset, NULL, NULL, NULL);
-  for (size_t i = 0; i < fds.size(); i++) {
-    if (FD_ISSET(fds[i], &fdset)) {
-      recv(fds[i], &potato, sizeof(potato), MSG_WAITALL);
-      break;
+    select(fdmax + 1, &fdset, NULL, NULL, NULL);
+    for (size_t i = 0; i < fds.size(); i++) {
+      if (FD_ISSET(fds[i], &fdset)) {
+        recv(fds[i], &potato, sizeof(potato), MSG_WAITALL);
+        break;
+      }
+    }
+    size_t done = 99;
+    for (size_t i = 0; i < noPlayers; i++) {
+      send(fds[i], &done, sizeof(done), 0);
+    }
+    // std::cout << "###################\n";
+    // std::cout << potato.hops << " " << potato.vecSize << std::endl;
+    for (size_t i = 0; i < potato.vecSize; i++) {
+      std::cout << potato.traceVector[i];
+      if (i != potato.vecSize - 1) {
+        std::cout << ", ";
+      }
+    }
+    std::cout << std::endl;
+    // std::cout << "\n###################\n";
+  }
+  else {
+    size_t done = 99;
+    for (size_t i = 0; i < clientsInformation.size(); i++) {
+      send(clientsInformation[i].fd, &done, sizeof(done), 0);
     }
   }
-  size_t done = 99;
-  for (size_t i = 0; i < noPlayers; i++) {
-    send(fds[i], &done, sizeof(done), 0);
-  }
-  // std::cout << "###################\n";
-  // std::cout << potato.hops << " " << potato.vecSize << std::endl;
-  for (size_t i = 0; i < potato.vecSize; i++) {
-    std::cout << potato.traceVector[i];
-    if (i != potato.vecSize - 1) {
-      std::cout << ", ";
-    }
-  }
-  std::cout << std::endl;
-  // std::cout << "\n###################\n";
   return 0;
 }
 
