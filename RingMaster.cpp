@@ -130,11 +130,13 @@ int main() {
   // int value = 9;
   potato_t potato;
   potato.hops = 10;
-  potato.vecSize = 5;
+  potato.vecSize = 0;
   for (size_t i = 0; i < potato.vecSize; i++) {
     potato.traceVector[i] = (i + 1) * 10;
   }
-  send(clientsInformation[0].fd, &potato, sizeof(potato), 0);
+  int playerToStartWith = rand() % noPlayers;
+  std::cout << "Starting game with player " << playerToStartWith << std::endl;
+  send(clientsInformation[playerToStartWith].fd, &potato, sizeof(potato), 0);
 
   return 0;
 }
