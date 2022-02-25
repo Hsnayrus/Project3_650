@@ -149,9 +149,14 @@ for this piece of code before Socket client() line
       potato.traceVector[potato.vecSize] = myID;
       potato.vecSize++;
       if (potato.hops == potato.vecSize) {
+        size_t done = 0;
         send(ringMaster_fd, &potato, sizeof(potato), 0);
         std::cout << "I'm it\n";
-        break;
+        len = recv(ringMaster_fd, &done, sizeof(done), MSG_WAITALL);
+        if (len == sizeof(done)) {
+          std::cout << "Received done: " << done << std::endl;
+          break;
+        }
       }
       // bool flag = true;
       if (sendTo == 0) {
