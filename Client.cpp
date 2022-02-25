@@ -45,7 +45,23 @@ for this piece of code before Socket client() line
   newVector.clear();
   cInfo_t info;
   client.receiveClientInfo(client.getSocket_FD(), info);
+
   int myID = info.portNum - 31000;
+  int leftsID = INT8_MIN;
+  int rightsID = INT8_MIN;
+  if (myID == 0) {
+    leftsID = info.noPlayers - 1;
+    rightsID = myID + 1;
+  }
+  else if (myID == info.noPlayers - 1) {
+    leftsID = myID - 1;
+    rightsID = 0;
+  }
+  else {
+    leftsID = myID - 1;
+    rightsID = myID + 1;
+  }
+
   //Server that waits for a connection
   Socket leftPlayer(num2Str(info.portNum).c_str());
   leftPlayer.createSocket();
@@ -120,25 +136,31 @@ for this piece of code before Socket client() line
 
       select(fdmax + 1, &fdset, NULL, NULL, NULL);
 
+      size_t len = INT8_MIN;
       for (size_t i = 0; i < fds.size(); i++) {
         if (FD_ISSET(fds[i], &fdset)) {
-          recv(fds[i], &potato, sizeof(potato), MSG_WAITALL);
+          len = recv(fds[i], &potato, sizeof(potato), MSG_WAITALL);
           break;
         }
       }
-
+      if (len == sizeof(size_t)) {
+        break;
+      }
       potato.traceVector[potato.vecSize] = myID;
       potato.vecSize++;
       if (potato.hops == potato.vecSize) {
         send(ringMaster_fd, &potato, sizeof(potato), 0);
+        std::cout << "I'm it\n";
         break;
       }
       // bool flag = true;
       if (sendTo == 0) {
         send(leftClient_fd, &potato, sizeof(potato), 0);
+        std::cout << "Sending potato to " << leftsID << "\n";
       }
       else if (sendTo == 1) {
         send(rightClient_fd, &potato, sizeof(potato), 0);
+        std::cout << "Sending potato to " << rightsID << "\n";
       }
     }
   }

@@ -21,13 +21,15 @@ int main(int argc, char ** argv) {
     return 0;
   }
   int noPlayersInt = atoi(argv[2]);
-  int noHopsInt = atoi(argv[2]);
+  int noHopsInt = atoi(argv[3]);
   assert(noPlayersInt > 1);
   assert(noHopsInt >= 0 && noHopsInt < 512);
 
   size_t noPlayers = (size_t)noPlayersInt;
   size_t noHops = (size_t)noHopsInt;
   const char * portNumber = argv[1];
+  std::cout << "Potato Ringmaster\nPlayers = " << noPlayers << "\nHops = " << noHops
+            << "\n";
   Socket ringMaster(portNumber);
   ringMaster.createSocket();
   ringMaster.bindSocket();
@@ -184,6 +186,10 @@ int main(int argc, char ** argv) {
       recv(fds[i], &potato, sizeof(potato), MSG_WAITALL);
       break;
     }
+  }
+  size_t done = 99;
+  for (size_t i = 0; i < noPlayers; i++) {
+    send(fds[i], &done, sizeof(done), 0);
   }
   // std::cout << "###################\n";
   // std::cout << potato.hops << " " << potato.vecSize << std::endl;
