@@ -88,15 +88,15 @@ int main() {
         FD_SET(fds[i], &fdset);
       }
 
-      std::cout << "Coming in main while loop\n";
+      // std::cout << "Coming in main while loop\n";
 
       int sendTo = rand() % 2;
 
-      std::cout << "Client: " << myID << " received : " << std::endl;
-      for (size_t i = 0; i < potato.vecSize; i++) {
-        std::cout << potato.traceVector[i] << ",";
-      }
-      std::cout << std::endl << potato.hops << std::endl;
+      // std::cout << "Client: " << myID << " received : " << std::endl;
+      // for (size_t i = 0; i < potato.vecSize; i++) {
+      //   std::cout << potato.traceVector[i] << ",";
+      // }
+      // std::cout << std::endl << potato.hops << std::endl;
 
       select(fdmax + 1, &fdset, NULL, NULL, NULL);
 

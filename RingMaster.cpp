@@ -15,21 +15,21 @@ in the Resources tab in Sakai.
 #include "functions.hpp"
 
 int main() {
-  size_t noHops = 10;
+  size_t noHops = 2;
   Socket ringMaster("4448");
   ringMaster.createSocket();
   ringMaster.bindSocket();
   ringMaster.listenOnSocket();
   std::vector<cInfo_t> clientsInformation;
-  int noPlayers = 3;
+  size_t noPlayers = 3;
   std::vector<char> buffer(65536);
   std::vector<std::string> ipAddresses;
   std::vector<int> nPorts;
   // buffer.clear();
   //Accept players;
-  for (int i = 0; i < noPlayers; i++) {
+  for (size_t i = 0; i < noPlayers; i++) {
     std::pair<int, std::string> temp = ringMaster.acceptConnections();
-    std::cout << "Accept players loop " << temp.first << "\n";
+    // std::cout << "Accept players loop " << temp.first << "\n";
     int len = ringMaster.readBuffer(temp.first, buffer);
 
     std::string message(buffer.begin(), buffer.begin() + len);
@@ -43,7 +43,7 @@ int main() {
       clientsInformation.push_back(clientInfo);
     }
   }
-  std::cout << clientsInformation.size() << "&&&&\n";
+  // std::cout << clientsInformation.size() << "&&&&\n";
   //Basically i am appending the list of ip addresss to itself;
   //Then i will just assign target addresses to players starting from index 1.
   //This is a cleaner approach
@@ -63,7 +63,7 @@ int main() {
 
   //Loop to send client's their portNumber, their fd's and their neighbors ip Addresses
   for (size_t i = 0; i < clientsInformation.size(); i++) {
-    std::cout << "Coming in this loop\n";
+    // std::cout << "Coming in this loop\n";
     cInfo_t temp;
     temp.fd = clientsInformation[i].fd;
     temp.portNum = clientsInformation[i].portNum;
@@ -75,16 +75,16 @@ int main() {
     temp.noPlayers = clientsInformation[i].noPlayers;
     ringMaster.sendClientInfo(temp.fd, &temp);
     temp.fd = clientsInformation[i].fd;
-    std::cout << "%%%%%%%%%%%%%%%%\n";
-    std::cout << temp.fd << " " << temp.ipSize << " " << temp.portNum << std::endl;
-    for (int i = 0; i < temp.ipSize; i++) {
-      std::cout << temp.ipAddress[i];
-    }
+    // std::cout << "%%%%%%%%%%%%%%%%\n";
+    // std::cout << temp.fd << " " << temp.ipSize << " " << temp.portNum << std::endl;
+    // for (int i = 0; i < temp.ipSize; i++) {
+    //   std::cout << temp.ipAddress[i];
+    // }
   }
 
   //Accept client status, listening information from players
   std::vector<sync_t> clientSync;
-  for (int i = 0; i < noPlayers; i++) {
+  for (size_t i = 0; i < noPlayers; i++) {
     sync_t temp;
     temp.doneAccepting = 0;
     temp.doneListening = 0;
@@ -95,9 +95,9 @@ int main() {
   }
 
   //Check if all are done listening
-  int allDoneListening = 0;
+  size_t allDoneListening = 0;
   while (allDoneListening != noPlayers) {
-    for (int i = 0; i < noPlayers; i++) {
+    for (size_t i = 0; i < noPlayers; i++) {
       if (clientSync[i].doneListening == 1) {
         clientSync[i].doneListening = 0;
         allDoneListening++;
@@ -105,7 +105,7 @@ int main() {
     }
   }
   //Tell clients to start accepting connections
-  for (int i = 0; i < noPlayers; i++) {
+  for (size_t i = 0; i < noPlayers; i++) {
     sync_t temp;
     temp.doneAccepting = clientSync[i].doneAccepting;
     temp.doneListening = 1;
@@ -114,16 +114,16 @@ int main() {
   }
 
   //Receive ack that everyone has started accepting connections
-  for (int i = 0; i < noPlayers; i++) {
+  for (size_t i = 0; i < noPlayers; i++) {
     sync_t temp;
     ringMaster.receiveSyncInfo(clientsInformation[i].fd, temp);
     clientSync[i].doneAccepting = temp.doneAccepting;
     clientSync[i].doneListening = temp.doneListening;
     clientSync[i].startAccepting = temp.startAccepting;
   }
-  int allAccepted = 0;
+  size_t allAccepted = 0;
   while (allAccepted != noPlayers) {
-    for (int i = 0; i < noPlayers; i++) {
+    for (size_t i = 0; i < noPlayers; i++) {
       if (clientSync[i].doneAccepting == 1) {
         clientSync[i].doneAccepting = 0;
         allAccepted++;
@@ -131,7 +131,10 @@ int main() {
     }
   }
   if (allDoneListening == noPlayers && allAccepted == noPlayers) {
-    std::cout << "All clients accepted it seems\n";
+    // std::cout << "All clients accepted it seems\n";
+    for (size_t i = 0; i < noPlayers; i++) {
+      std::cout << "Player " << i << " is ready to play\n";
+    }
   }
   // int value = 9;
   potato_t potato;
@@ -140,15 +143,16 @@ int main() {
   memset(potato.traceVector, 0, sizeof(potato));
 
   int playerToStartWith = rand() % noPlayers;
-  std::cout << "Starting game with player " << playerToStartWith << std::endl;
+  // std::cout << "Starting game with player " << playerToStartWith << std::endl;
 
-  std::cout << "###################\n";
-  std::cout << potato.hops << " " << potato.vecSize << std::endl;
-  for (size_t i = 0; i < potato.vecSize; i++) {
-    std::cout << potato.traceVector[i] << ", ";
-  }
-  std::cout << "\n###################\n";
-
+  // std::cout << "###################\n";
+  // std::cout << potato.hops << " " << potato.vecSize << std::endl;
+  // for (size_t i = 0; i < potato.vecSize; i++) {
+  //   std::cout << potato.traceVector[i] << ", ";
+  // }
+  // std::cout << "\n###################\n";
+  std::cout << "Ready to start the game, sending potato to player " << playerToStartWith
+            << std::endl;
   int status = send(clientsInformation[playerToStartWith].fd, &potato, sizeof(potato), 0);
   if (status == -1) {
     std::cerr << "Couldn't send potato to player: " << playerToStartWith << std::endl;
@@ -170,12 +174,16 @@ int main() {
       break;
     }
   }
-  std::cout << "###################\n";
-  std::cout << potato.hops << " " << potato.vecSize << std::endl;
+  // std::cout << "###################\n";
+  // std::cout << potato.hops << " " << potato.vecSize << std::endl;
   for (size_t i = 0; i < potato.vecSize; i++) {
-    std::cout << potato.traceVector[i] << ", ";
+    std::cout << potato.traceVector[i];
+    if (i != potato.vecSize - 1) {
+      std::cout << ", ";
+    }
   }
-  std::cout << "\n###################\n";
+  std::cout << std::endl;
+  // std::cout << "\n###################\n";
   return 0;
 }
 

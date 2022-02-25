@@ -149,7 +149,7 @@ Method that allows a socket to receive data from clients
 */
   std::pair<int, std::string> acceptConnections() {
     int client_connection_fd;
-    std::cout << "Waiting for connection on port: " << port << std::endl;
+    // std::cout << "Waiting for connection on port: " << port << std::endl;
     struct sockaddr_storage socket_addr;
     socklen_t socket_addr_len = sizeof(socket_addr);
     client_connection_fd =
@@ -173,11 +173,11 @@ Method that allows a socket to receive data from clients
   //Reads from the buffer
   int readBuffer(int client_connection_fd, std::vector<char> & buffer) {
     int len = recv(client_connection_fd, buffer.data(), buffer.size(), 0);
-    std::cout << "Server received: ";
-    for (int i = 0; i < len; i++) {
-      std::cout << buffer[i];
-    }
-    std::cout << std::endl;
+    // std::cout << "Server received: ";
+    // for (int i = 0; i < len; i++) {
+    //   std::cout << buffer[i];
+    // }
+    // std::cout << std::endl;
     return len;
     // return std::vector<char>(buffer.begin(), buffer.begin() + len);
   }
@@ -185,18 +185,18 @@ Method that allows a socket to receive data from clients
   void receivePotato(int client_fd) {
     potato_t potato;
     recv(client_fd, &potato, sizeof(potato), MSG_WAITALL);
-    for (size_t i = 0; i < potato.vecSize; i++) {
-      std::cout << potato.traceVector[i] << ",";
-    }
-    std::cout << std::endl;
+    // for (size_t i = 0; i < potato.vecSize; i++) {
+    //   std::cout << potato.traceVector[i] << ",";
+    // }
+    // std::cout << std::endl;
   }
 
   /*
 Method that allows user to send data to the server
 */
   void sendToServer(std::vector<char> & request) {
-    std::cout << "Connecting to " << hostName << " on port " << port << "..."
-              << std::endl;
+    // std::cout << "Connecting to " << hostName << " on port " << port << "..."
+    //           << std::endl;
 
     status = connect(socket_fd, host_info_list->ai_addr, host_info_list->ai_addrlen);
     if (status == -1) {
@@ -225,21 +225,21 @@ Method that allows user to send data to the server
   //Not sure about parameter's name
   void receiveClientInfo(int server_fd, cInfo_t & clientInfo) {
     recv(server_fd, &clientInfo, sizeof(clientInfo), MSG_WAITALL);
-    std::cout << "=======================" << std::endl;
-    std::cout << clientInfo.fd << std::endl;
-    std::cout << clientInfo.portNum << std::endl;
-    std::cout << clientInfo.ipSize << std::endl;
-    std::cout << clientInfo.nPort << std::endl;
-    std::cout << clientInfo.noPlayers << std::endl;
-    for (int i = 0; i < clientInfo.ipSize; i++) {
-      std::cout << clientInfo.ipAddress[i];
-    }
-    std::cout << std::endl;
+    // std::cout << "=======================" << std::endl;
+    // std::cout << clientInfo.fd << std::endl;
+    // std::cout << clientInfo.portNum << std::endl;
+    // std::cout << clientInfo.ipSize << std::endl;
+    // std::cout << clientInfo.nPort << std::endl;
+    // std::cout << clientInfo.noPlayers << std::endl;
+    // for (int i = 0; i < clientInfo.ipSize; i++) {
+    //   std::cout << clientInfo.ipAddress[i];
+    // }
+    // std::cout << std::endl;
   }
 
   void connectTo(int client_fd) {
-    std::cout << "Connecting to " << hostName << " on port " << port << "..."
-              << std::endl;
+    // std::cout << "Connecting to " << hostName << " on port " << port << "..."
+    //           << std::endl;
 
     status = connect(socket_fd, host_info_list->ai_addr, host_info_list->ai_addrlen);
     if (status == -1) {
@@ -259,9 +259,9 @@ Method that allows user to send data to the server
   void receiveSyncInfo(int fd, sync_t & syncInfo) {
     int len = sizeof(syncInfo);
     recv(fd, &syncInfo, len, MSG_WAITALL);
-    std::cout << "-^-^-^-^-^-^-^-^-^-^\n";
-    std::cout << syncInfo.doneListening << std::endl;
-    std::cout << syncInfo.startAccepting << std::endl;
-    std::cout << syncInfo.doneAccepting << std::endl;
+    // std::cout << "-^-^-^-^-^-^-^-^-^-^\n";
+    // std::cout << syncInfo.doneListening << std::endl;
+    // std::cout << syncInfo.startAccepting << std::endl;
+    // std::cout << syncInfo.doneAccepting << std::endl;
   }
 };
