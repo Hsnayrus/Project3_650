@@ -118,20 +118,24 @@ int main() {
     clientSync[i].startAccepting = temp.startAccepting;
   }
   int allAccepted = 0;
-  for (int i = 0; i < noPlayers; i++) {
-    if (clientSync[i].doneAccepting == 1) {
-      allAccepted++;
+  while (allAccepted != noPlayers) {
+    for (int i = 0; i < noPlayers; i++) {
+      if (clientSync[i].doneAccepting == 1) {
+        clientSync[i].doneAccepting = 0;
+        allAccepted++;
+      }
     }
   }
   std::cout << "All clients accepted it seems\n";
-  //Send neihbors to players
+  // int value = 9;
+  potato_t potato;
+  potato.hops = 10;
+  potato.vecSize = 5;
+  for (size_t i = 0; i < potato.vecSize; i++) {
+    potato.traceVector[i] = (i + 1) * 10;
+  }
+  send(clientsInformation[0].fd, &potato, sizeof(potato), 0);
 
-  // RingMaster r1(2);
-  // r1.makeServerSocket();
-  // r1.letPlayersConnect();
-  // r1.sendIDsToPlayers();
-  // r1.assignNeighbors();
-  // r1.sendPotatoToClient();
   return 0;
 }
 

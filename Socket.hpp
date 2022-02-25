@@ -95,7 +95,6 @@ This function creates a socket with the hostname and socket initialized before w
   Socket(const Socket & rhs) {
     hostName = rhs.hostName;
     port = rhs.port;
-    createSocket();
   }
   Socket() {
     hostName = "";
@@ -107,7 +106,6 @@ This function creates a socket with the hostname and socket initialized before w
     if (this != &rhs) {
       hostName = rhs.hostName;
       port = rhs.port;
-      createSocket();
     }
     return *this;
   }

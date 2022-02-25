@@ -24,7 +24,7 @@ int main() {
   newVector.clear();
   cInfo_t info;
   client.receiveClientInfo(client.getSocket_FD(), info);
-
+  int myID = info.portNum - 31000;
   //Server that waits for a connection
   Socket leftPlayer(num2Str(info.portNum).c_str());
   leftPlayer.createSocket();
@@ -51,42 +51,56 @@ int main() {
     std::cout << "Created left Player socket\n";
     syncInfo.doneAccepting = 1;
     client.sendSyncInfo(client.getSocket_FD(), &syncInfo);
+    std::cout << myID << "Jhaatu\n";
+    std::cout << info.fd << " DSNNNAND " << client.getSocket_FD() << std::endl;
+
+    // int data = 0;
+    potato_t potato;
+    potato.hops = 0;
+    potato.vecSize = 0;
+    if (myID == 0) {
+      recv(client.getSocket_FD(), &potato, sizeof(potato), 0);
+      send(leftsClient.first, &potato, sizeof(potato), 0);
+    }
+    if (myID == 2) {
+      recv(rightPlayer.getSocket_FD(), &potato, sizeof(potato), 0);
+    }
+    std::cout << "Client: " << myID << " received : " << std::endl;
+    for (size_t i = 0; i < potato.vecSize; i++) {
+      std::cout << potato.traceVector[i] << ",";
+    }
+    std::cout << std::endl << potato.hops << std::endl;
+    // int leftClient_fd = leftsClient.first;
+    // int rightClient_fd = rightPlayer.getSocket_FD();
+
+    // int fdmax = (leftClient_fd > rightClient_fd)
+    //                 ? (leftClient_fd > ringMaster_fd ? leftClient_fd : ringMaster_fd)
+    //                 : (rightClient_fd > ringMaster_fd ? rightClient_fd : ringMaster_fd);
+
+    // fd_set fdset;
+    // FD_ZERO(&fdset);
+    // FD_SET(leftClient_fd, &fdset);
+    // FD_SET(rightClient_fd, &fdset);
+    // FD_SET(ringMaster_fd, &fdset);
+    // srand((unsigned int)time(NULL) + myID);
+    // while (true) {
+    //   select(fdmax + 1, &fdset, NULL, NULL, NULL);
+    //   potato_t potato;
+    //   potato.hops = 0;
+    //   potato.vecSize = 0;
+    //   if (FD_ISSET(leftClient_fd, &fdset)) {
+    //     send(leftClient_fd, &potato, sizeof(potato), MSG_WAITALL);
+    //     std::cout << "Receiving from left client\n";
+    //   }
+    //   else if (FD_ISSET(rightClient_fd, &fdset)) {
+    //     // recv(righ, &potato, sizeof(potato), MSG_WAITALL);
+    //     std::cout << "Receiving from right client\n";
+    //   }
+    //   else if (FD_ISSET(ringMaster_fd, &fdset)) {
+    //     std::cout << "Receiving from ringMaster\n";
+    //   }
+    // }
   }
-
-  // int leftClient_fd = leftsClient.first;
-  // int rightClient_fd = rightPlayer.getSocket_FD();
-
-  // int fdmax = (leftClient_fd > rightClient_fd)
-  //                 ? (leftClient_fd > ringMaster_fd ? leftClient_fd : ringMaster_fd)
-  //                 : (rightClient_fd > ringMaster_fd ? rightClient_fd : ringMaster_fd);
-
-  // fd_set fdset;
-  // FD_ZERO(&fdset);
-  // FD_SET(leftClient_fd, &fdset);
-  // FD_SET(rightClient_fd, &fdset);
-  // FD_SET(ringMaster_fd, &fdset);
-
-  // select(fdmax + 1, &fdset, NULL, NULL, NULL);
-  // while (true) {
-  //   if (FD_ISSET(leftClient_fd, &fdset)) {
-  //     std::cout << "Receiving from left's client\n";
-  //   }
-  //   else if (FD_ISSET(rightClient_fd, &fdset)) {
-  //     std::cout << "Receiving from right client\n";
-  //   }
-  //   else if (FD_ISSET(ringMaster_fd, &fdset)) {
-  //     std::cout << "Receiving from ringMaster\n";
-  //   }
-  // }
-  // int len = recv(client.getSocket_FD(), buffer.data(), buffer.size(), 0);
-  // std::string ipPort(buffer.begin(), buffer.begin() + len);
-  // std::pair<std::string, std::string> ipPortPair = parseIPPort(ipPort);
-  // std::cout << ipPortPair.first << "______________________" << ipPortPair.second;
-  // //Listener in every client
-  // Socket rightClient(ipPortPair.first.c_str(), ipPortPair.second.c_str());
-  // rightClient.createSocket();
-  // std::string ipMessage(buffer.begin(), buffer.end());
-  // std::cout << "$$$$" << ipMessage << std::endl;
   return 0;
 }
 
