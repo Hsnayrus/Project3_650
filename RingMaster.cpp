@@ -198,10 +198,9 @@ int main(int argc, char ** argv) {
     for (size_t i = 0; i < potato.vecSize; i++) {
       std::cout << potato.traceVector[i];
       if (i != potato.vecSize - 1) {
-        std::cout << ", ";
+        std::cout << ",";
       }
     }
-    std::cout << std::endl;
     // std::cout << "\n###################\n";
   }
   else {
