@@ -110,13 +110,13 @@ for this piece of code before Socket client() line
     fds.push_back(rightClient_fd);
     fds.push_back(ringMaster_fd);
 
-    potato_t potato;
-    potato.hops = 0;
-    potato.vecSize = 0;
-    memset(potato.traceVector, 0, sizeof(potato.traceVector));
-
     srand((unsigned int)time(NULL) + myID);
     while (true) {
+      potato_t potato;
+      potato.hops = 0;
+      potato.vecSize = 0;
+      memset(potato.traceVector, 0, sizeof(potato.traceVector));
+
       fd_set fdset;
       int fdmax = findMax(fds);
       FD_ZERO(&fdset);

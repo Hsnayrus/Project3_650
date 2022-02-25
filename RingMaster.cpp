@@ -195,6 +195,7 @@ int main(int argc, char ** argv) {
     }
     // std::cout << "###################\n";
     // std::cout << potato.hops << " " << potato.vecSize << std::endl;
+    std::cout << "Trace of potato:\n";
     for (size_t i = 0; i < potato.vecSize; i++) {
       std::cout << potato.traceVector[i];
       if (i != potato.vecSize - 1) {
