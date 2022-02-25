@@ -14,14 +14,25 @@ in the Resources tab in Sakai.
 #include "client.hpp"
 #include "functions.hpp"
 
-int main() {
-  size_t noHops = 2;
-  Socket ringMaster("4448");
+int main(int argc, char ** argv) {
+  if (argc != 4) {
+    std::cerr
+        << "Wrong usage. Correct usage is: ./ringmaster portnumber numPlayers numHops\n";
+    return 0;
+  }
+  int noPlayersInt = atoi(argv[2]);
+  int noHopsInt = atoi(argv[2]);
+  assert(noPlayersInt > 1);
+  assert(noHopsInt >= 0 && noHopsInt < 512);
+
+  size_t noPlayers = (size_t)noPlayersInt;
+  size_t noHops = (size_t)noHopsInt;
+  const char * portNumber = argv[1];
+  Socket ringMaster(portNumber);
   ringMaster.createSocket();
   ringMaster.bindSocket();
   ringMaster.listenOnSocket();
   std::vector<cInfo_t> clientsInformation;
-  size_t noPlayers = 3;
   std::vector<char> buffer(65536);
   std::vector<std::string> ipAddresses;
   std::vector<int> nPorts;

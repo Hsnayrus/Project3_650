@@ -12,8 +12,28 @@ void tryConnectTo(Socket & rightPlayer) {
   rightPlayer.connectTo(rightPlayer.getSocket_FD());
 }
 
-int main() {
-  Socket client("127.0.0.1", "4448");
+int main(int argc, char ** argv) {
+  if (argc != 3) {
+    std::cerr << "Wrong usage. Correct usage is ./player machineName pprtNumber\n";
+    return 0;
+  }
+
+  /*
+Referred to http://www.cplusplus.com/forum/articles/9742/
+for this piece of code before Socket client() line
+*/
+
+  hostent * record = gethostbyname(argv[1]);
+  if (record == NULL) {
+    std::cout << argv[1] << " is unavailable\n";
+    return 0;
+  }
+
+  const char * ringMasterPort = argv[2];
+  in_addr * address = (in_addr *)record->h_addr;
+  std::string ip_address = inet_ntoa(*address);
+
+  Socket client(ip_address.c_str(), ringMasterPort);
   std::string messageToSend = "Ready for connection.";
   std::vector<char> newVector(messageToSend.begin(),
                               messageToSend.begin() + messageToSend.size());
