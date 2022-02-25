@@ -1,5 +1,4 @@
-#include <mutex>
-#include <thread>
+
 
 #include "Socket.hpp"
 #include "functions.hpp"
@@ -70,59 +69,145 @@ int main() {
 
     int leftClient_fd = leftsClient.first;
     int rightClient_fd = rightPlayer.getSocket_FD();
+    std::vector<int> fds;
+    fds.push_back(leftClient_fd);
+    fds.push_back(rightClient_fd);
+    fds.push_back(ringMaster_fd);
 
-    int fdmax = (leftClient_fd > rightClient_fd)
-                    ? (leftClient_fd > ringMaster_fd ? leftClient_fd : ringMaster_fd)
-                    : (rightClient_fd > ringMaster_fd ? rightClient_fd : ringMaster_fd);
-
-    fd_set fdset;
-    FD_ZERO(&fdset);
-    FD_SET(leftClient_fd, &fdset);
-    FD_SET(rightClient_fd, &fdset);
-    FD_SET(ringMaster_fd, &fdset);
-    int sendTo = -65536;
-    srand((unsigned int)time(NULL) + myID);
-    // while (true) {
-    select(fdmax + 1, &fdset, NULL, NULL, NULL);
-    sendTo = rand() % 2;
     potato_t potato;
     potato.hops = 0;
     potato.vecSize = 0;
-    if (FD_ISSET(leftClient_fd, &fdset)) {
-      recv(leftClient_fd, &potato, sizeof(potato), MSG_WAITALL);
-    }
-    if (FD_ISSET(rightClient_fd, &fdset)) {
-      recv(rightClient_fd, &potato, sizeof(potato), MSG_WAITALL);
-    }
-    if (FD_ISSET(ringMaster_fd, &fdset)) {
-      std::cout << "Received from ringmaster\n";
-      recv(ringMaster_fd, &potato, sizeof(potato), MSG_WAITALL);
-    }
-    potato.traceVector[potato.vecSize] = myID;
-    potato.vecSize++;
-    if (potato.vecSize == potato.hops) {
-      std::cout << "I'm it\n";
-    }
-    if (sendTo == 0) {
-      send(leftClient_fd, &potato, sizeof(potato), 0);
-    }
-    if (sendTo == 1) {
-      send(rightClient_fd, &potato, sizeof(potato), 0);
-    }
-    if (sendTo == 0) {
-      std::cout << "Sent to left client" << sendTo << "\n";
-    }
-    if (sendTo == 1) {
-      std::cout << "Sent to right client\n" << sendTo << "\n";
-    }
-    std::cout << "Client: " << myID << " received : " << std::endl;
-    for (size_t i = 0; i < potato.vecSize; i++) {
-      std::cout << potato.traceVector[i] << ",";
-    }
-    std::cout << std::endl << potato.hops << std::endl;
+    memset(potato.traceVector, 0, sizeof(potato.traceVector));
 
-    // }
+    srand((unsigned int)time(NULL) + myID);
+    while (true) {
+      fd_set fdset;
+      int fdmax = findMax(fds);
+      FD_ZERO(&fdset);
+      for (size_t i = 0; i < fds.size(); i++) {
+        FD_SET(fds[i], &fdset);
+      }
+
+      std::cout << "Coming in main while loop\n";
+
+      int sendTo = rand() % 2;
+
+      std::cout << "Client: " << myID << " received : " << std::endl;
+      for (size_t i = 0; i < potato.vecSize; i++) {
+        std::cout << potato.traceVector[i] << ",";
+      }
+      std::cout << std::endl << potato.hops << std::endl;
+
+      select(fdmax + 1, &fdset, NULL, NULL, NULL);
+
+      for (size_t i = 0; i < fds.size(); i++) {
+        if (FD_ISSET(fds[i], &fdset)) {
+          recv(fds[i], &potato, sizeof(potato), MSG_WAITALL);
+          break;
+        }
+      }
+
+      potato.traceVector[potato.vecSize] = myID;
+      potato.vecSize++;
+      if (potato.hops == potato.vecSize) {
+        send(ringMaster_fd, &potato, sizeof(potato), 0);
+        break;
+      }
+      // bool flag = true;
+      if (sendTo == 0) {
+        send(leftClient_fd, &potato, sizeof(potato), 0);
+      }
+      else if (sendTo == 1) {
+        send(rightClient_fd, &potato, sizeof(potato), 0);
+      }
+    }
   }
+  // while (true) {
+  // select(fdmax + 1, &fdset, NULL, NULL, NULL);
+  // sendTo = rand() % 2;
+  // potato_t potato;
+  // potato.hops = 0;
+  // potato.vecSize = 0;
+  // if (FD_ISSET(leftClient_fd, &fdset)) {
+  //   recv(leftClient_fd, &potato, sizeof(potato), MSG_WAITALL);
+  // }
+  // if (FD_ISSET(rightClient_fd, &fdset)) {
+  //   recv(rightClient_fd, &potato, sizeof(potato), MSG_WAITALL);
+  // }
+  // if (FD_ISSET(ringMaster_fd, &fdset)) {
+  //   std::cout << "Received from ringmaster\n";
+  //   recv(ringMaster_fd, &potato, sizeof(potato), MSG_WAITALL);
+  // }
+  // potato.traceVector[potato.vecSize] = myID;
+  // potato.vecSize++;
+  // if (potato.vecSize == potato.hops) {
+  //   std::cout << "I'm it\n";
+  //   send(ringMaster_fd, &potato, sizeof(potato), 0);
+  // }
+  // if (sendTo == 0) {
+  //   send(leftClient_fd, &potato, sizeof(potato), 0);
+  //   std::cout << "Sent to left client" << sendTo << "\n";
+  // }
+  // if (sendTo == 1) {
+  //   send(rightClient_fd, &potato, sizeof(potato), 0);
+  //   std::cout << "Sent to right client\n" << sendTo << "\n";
+  // }
+  // std::cout << "Client: " << myID << " received : " << std::endl;
+  // for (size_t i = 0; i < potato.vecSize; i++) {
+  //   std::cout << potato.traceVector[i] << ",";
+  // }
+  // std::cout << std::endl << potato.hops << std::endl;
+
+  // if (potato.vecSize != potato.hops) {
+  //   while(true){
+  //     select(fdmax + 1, &fdset, NULL, NULL, NULL);
+  //     if(FD_ISSET(leftClient_fd, &fdset)){
+  //       recv()
+  //     }
+  //   }
+  // }
+  /*
+
+*/
+
+  //   while (flag) {
+  //     select(fdmax + 1, &fdset, NULL, NULL, NULL);
+  //     sendTo = rand() % 2;
+  //     potato_t potato;
+  //     potato.hops = 0;
+  //     potato.vecSize = 0;
+  //     if (FD_ISSET(leftClient_fd, &fdset)) {
+  //       recv(leftClient_fd, &potato, sizeof(potato), MSG_WAITALL);
+  //     }
+  //     if (FD_ISSET(rightClient_fd, &fdset)) {
+  //       recv(rightClient_fd, &potato, sizeof(potato), MSG_WAITALL);
+  //     }
+  //     if (FD_ISSET(ringMaster_fd, &fdset)) {
+  //       std::cout << "Received from ringmaster\n";
+  //       recv(ringMaster_fd, &potato, sizeof(potato), MSG_WAITALL);
+  //     }
+  //     potato.traceVector[potato.vecSize] = myID;
+  //     potato.vecSize++;
+  //     if (potato.vecSize == potato.hops) {
+  //       std::cout << "I'm it\n";
+  //       send(ringMaster_fd, &potato, sizeof(potato), 0);
+  // flag = false;
+  //     }
+  //     if (sendTo == 0) {
+  //       send(leftClient_fd, &potato, sizeof(potato), 0);
+  //       std::cout << "Sent to left client" << sendTo << "\n";
+  //     }
+  //     if (sendTo == 1) {
+  //       send(rightClient_fd, &potato, sizeof(potato), 0);
+  //       std::cout << "Sent to right client\n" << sendTo << "\n";
+  //     }
+  //     // std::cout << "Client: " << myID << " received : " << std::endl;
+  //     // for (size_t i = 0; i < potato.vecSize; i++) {
+  //     //   std::cout << potato.traceVector[i] << ",";
+  //     // }
+  //     // std::cout << std::endl << potato.hops << std::endl;
+  //   }
+  // }
   return 0;
 }
 

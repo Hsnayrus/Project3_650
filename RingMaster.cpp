@@ -15,6 +15,7 @@ in the Resources tab in Sakai.
 #include "functions.hpp"
 
 int main() {
+  size_t noHops = 10;
   Socket ringMaster("4448");
   ringMaster.createSocket();
   ringMaster.bindSocket();
@@ -87,6 +88,7 @@ int main() {
     sync_t temp;
     temp.doneAccepting = 0;
     temp.doneListening = 0;
+    temp.startAccepting = 1;
     ringMaster.receiveSyncInfo(clientsInformation[i].fd, temp);
     temp.startAccepting = 1;
     clientSync.push_back(temp);
@@ -94,21 +96,23 @@ int main() {
 
   //Check if all are done listening
   int allDoneListening = 0;
-  for (int i = 0; i < noPlayers; i++) {
-    if (clientSync[i].doneListening == 1) {
-      allDoneListening++;
+  while (allDoneListening != noPlayers) {
+    for (int i = 0; i < noPlayers; i++) {
+      if (clientSync[i].doneListening == 1) {
+        clientSync[i].doneListening = 0;
+        allDoneListening++;
+      }
     }
   }
   //Tell clients to start accepting connections
-  if (allDoneListening == noPlayers) {
-    for (int i = 0; i < noPlayers; i++) {
-      sync_t temp;
-      temp.doneAccepting = clientSync[i].doneAccepting;
-      temp.doneListening = clientSync[i].doneListening;
-      temp.startAccepting = clientSync[i].startAccepting;
-      ringMaster.sendSyncInfo(clientsInformation[i].fd, &temp);
-    }
+  for (int i = 0; i < noPlayers; i++) {
+    sync_t temp;
+    temp.doneAccepting = clientSync[i].doneAccepting;
+    temp.doneListening = 1;
+    temp.startAccepting = clientSync[i].startAccepting;
+    ringMaster.sendSyncInfo(clientsInformation[i].fd, &temp);
   }
+
   //Receive ack that everyone has started accepting connections
   for (int i = 0; i < noPlayers; i++) {
     sync_t temp;
@@ -126,18 +130,52 @@ int main() {
       }
     }
   }
-  std::cout << "All clients accepted it seems\n";
+  if (allDoneListening == noPlayers && allAccepted == noPlayers) {
+    std::cout << "All clients accepted it seems\n";
+  }
   // int value = 9;
   potato_t potato;
-  potato.hops = 10;
+  potato.hops = noHops;
   potato.vecSize = 0;
-  for (size_t i = 0; i < potato.vecSize; i++) {
-    potato.traceVector[i] = (i + 1) * 10;
-  }
+  memset(potato.traceVector, 0, sizeof(potato));
+
   int playerToStartWith = rand() % noPlayers;
   std::cout << "Starting game with player " << playerToStartWith << std::endl;
-  send(clientsInformation[playerToStartWith].fd, &potato, sizeof(potato), 0);
 
+  std::cout << "###################\n";
+  std::cout << potato.hops << " " << potato.vecSize << std::endl;
+  for (size_t i = 0; i < potato.vecSize; i++) {
+    std::cout << potato.traceVector[i] << ", ";
+  }
+  std::cout << "\n###################\n";
+
+  int status = send(clientsInformation[playerToStartWith].fd, &potato, sizeof(potato), 0);
+  if (status == -1) {
+    std::cerr << "Couldn't send potato to player: " << playerToStartWith << std::endl;
+  }
+  std::vector<int> fds;
+
+  fd_set fdset;
+  FD_ZERO(&fdset);
+  for (size_t i = 0; i < clientsInformation.size(); i++) {
+    FD_SET(clientsInformation[i].fd, &fdset);
+    fds.push_back(clientsInformation[i].fd);
+  }
+  int fdmax = findMax(fds);
+
+  select(fdmax + 1, &fdset, NULL, NULL, NULL);
+  for (size_t i = 0; i < fds.size(); i++) {
+    if (FD_ISSET(fds[i], &fdset)) {
+      recv(fds[i], &potato, sizeof(potato), MSG_WAITALL);
+      break;
+    }
+  }
+  std::cout << "###################\n";
+  std::cout << potato.hops << " " << potato.vecSize << std::endl;
+  for (size_t i = 0; i < potato.vecSize; i++) {
+    std::cout << potato.traceVector[i] << ", ";
+  }
+  std::cout << "\n###################\n";
   return 0;
 }
 
